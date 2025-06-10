@@ -1,0 +1,219 @@
+/* 🩸 Dark Vapor Theme for MIRAGE.exe */
+
+:root {
+  /* Core Colors */
+  --color-void: #000000;
+  --color-static: #1a1a1a;
+  --color-glitch: #ff00ff;
+  --color-echo: #00ffff;
+  --color-blood: #ff0000;
+  --color-memory: #4a0080;
+  
+  /* UI Elements */
+  --color-window-bg: rgba(0, 0, 0, 0.85);
+  --color-window-border: var(--color-glitch);
+  --color-text: #ffffff;
+  --color-text-dim: #888888;
+  
+  /* Effects */
+  --glitch-intensity: 0;
+  --corruption-level: 0;
+}
+
+/* 🖥️ Base Styles */
+body {
+  background-color: var(--color-void);
+  color: var(--color-text);
+  font-family: 'VT323', monospace;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* 🪟 Window Styles */
+.window {
+  background: var(--color-window-bg);
+  border: 1px solid var(--color-window-border);
+  box-shadow: 0 0 10px var(--color-glitch);
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.window:hover {
+  border-color: var(--color-echo);
+  box-shadow: 0 0 15px var(--color-echo);
+}
+
+/* 🎭 Glitch Effects */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+.glitch {
+  position: relative;
+  animation: glitch 0.3s infinite;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glitch::before {
+  left: 2px;
+  text-shadow: -2px 0 var(--color-glitch);
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim 5s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  left: -2px;
+  text-shadow: -2px 0 var(--color-echo);
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim2 5s infinite linear alternate-reverse;
+}
+
+/* 📱 Taskbar */
+.taskbar {
+  background: rgba(0, 0, 0, 0.9);
+  border-top: 1px solid var(--color-glitch);
+  backdrop-filter: blur(10px);
+}
+
+/* 🖱️ Cursor */
+.cursor {
+  width: 20px;
+  height: 20px;
+  background: var(--color-glitch);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  transition: transform 0.1s ease;
+}
+
+/* 🎨 UI Elements */
+.button {
+  background: var(--color-static);
+  border: 1px solid var(--color-glitch);
+  color: var(--color-text);
+  padding: 8px 16px;
+  font-family: 'VT323', monospace;
+  transition: all 0.3s ease;
+}
+
+.button:hover {
+  background: var(--color-glitch);
+  color: var(--color-void);
+}
+
+/* 📁 File Icons */
+.file-icon {
+  filter: drop-shadow(0 0 5px var(--color-glitch));
+  transition: all 0.3s ease;
+}
+
+.file-icon:hover {
+  filter: drop-shadow(0 0 10px var(--color-echo));
+  transform: scale(1.1);
+}
+
+/* 🎵 Audio Visualization */
+.audio-visualizer {
+  height: 50px;
+  background: linear-gradient(
+    90deg,
+    var(--color-glitch),
+    var(--color-echo),
+    var(--color-memory)
+  );
+  opacity: 0.5;
+  mix-blend-mode: screen;
+}
+
+/* 🧬 Corruption Effects */
+.corrupted {
+  filter: hue-rotate(calc(var(--corruption-level) * 180deg))
+         saturate(calc(1 + var(--corruption-level)))
+         brightness(calc(1 + var(--corruption-level) * 0.5));
+}
+
+/* 📝 Terminal */
+.terminal {
+  background: rgba(0, 0, 0, 0.9);
+  color: var(--color-echo);
+  font-family: 'VT323', monospace;
+  padding: 10px;
+  border: 1px solid var(--color-glitch);
+}
+
+.terminal-input {
+  background: transparent;
+  border: none;
+  color: var(--color-echo);
+  font-family: 'VT323', monospace;
+  outline: none;
+}
+
+/* 🎭 Loading Animation */
+@keyframes loading {
+  0% { content: "["; }
+  25% { content: "[="; }
+  50% { content: "[=="; }
+  75% { content: "[==="; }
+  100% { content: "[===]"; }
+}
+
+.loading::after {
+  content: "[";
+  animation: loading 1s infinite;
+}
+
+/* 🩸 Blood Effect */
+.blood {
+  position: absolute;
+  background: var(--color-blood);
+  opacity: 0.7;
+  filter: blur(2px);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* 🎨 Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-void);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-glitch);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-echo);
+} 
