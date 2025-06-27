@@ -4,22 +4,31 @@
     "$className": "DataModel",
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "Modules": {
+      "MIRAGE_MODULES": {
         "$path": "src/roblox/modules"
       }
     },
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "Server": {
-        "$path": "src/roblox/init.server.lua"
+      "MIRAGE": {
+        "$path": "src/roblox/deploy.server.lua"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "MIRAGE_DATA": {
+        "$className": "Folder"
+      },
+      "MIRAGE_CONFIG": {
+        "$path": "src/roblox/deploy.config.lua"
       }
     },
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
-        "Client": {
-          "$path": "src/roblox/init.client.lua"
+        "MIRAGE": {
+          "$path": "src/roblox/deploy.client.lua"
         }
       }
     }

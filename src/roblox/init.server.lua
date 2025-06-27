@@ -2,6 +2,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
 
 -- Load modules
 local PersonalityResponses = require(ReplicatedStorage.Modules.PersonalityResponses)
@@ -74,5 +75,58 @@ spawn(function()
         end
     end
 end)
+
+-- Main Server Script
+local function initializeGame()
+    -- Set up personality state
+    PersonalityState.initialize()
+
+    -- Set up file system
+    FileSystem.initialize()
+
+    -- Set up command system
+    CommandSystem.initialize()
+
+    -- Set up effects
+    PersonalityEffects.initialize()
+    GlitchEffect.initialize()
+end
+
+-- Handle player joining
+Players.PlayerAdded:Connect(function(player)
+    -- Create player GUI
+    local playerGui = Instance.new("PlayerGui")
+    playerGui.Name = "PlayerGui"
+    playerGui.Parent = player
+
+    -- Create screen GUI
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "MIRAGE.EXE"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = playerGui
+
+    -- Create main window
+    local mainWindow = GameInterface.createMainWindow(screenGui)
+
+    -- Initialize player state
+    PersonalityState.initializePlayer(player)
+    FileSystem.initializePlayer(player)
+    CommandSystem.initializePlayer(player)
+    PersonalityEffects.initializePlayer(player)
+    GlitchEffect.initializePlayer(player)
+end)
+
+-- Handle player leaving
+Players.PlayerRemoving:Connect(function(player)
+    -- Clean up player state
+    PersonalityState.cleanupPlayer(player)
+    FileSystem.cleanupPlayer(player)
+    CommandSystem.cleanupPlayer(player)
+    PersonalityEffects.cleanupPlayer(player)
+    GlitchEffect.cleanupPlayer(player)
+end)
+
+-- Initialize game
+initializeGame()
 
 print("MIRAGE.exe server initialized successfully") 

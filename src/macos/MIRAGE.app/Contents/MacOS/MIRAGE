@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# MIRAGE.EXE macOS App Launcher
+
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+RESOURCES_DIR="$SCRIPT_DIR/../Resources"
+
+# Check if Roblox Studio is installed
+if [ ! -d "/Applications/Roblox Studio.app" ]; then
+    osascript -e 'display dialog "Roblox Studio is not installed. Please install it from https://www.roblox.com/create/download" buttons {"OK"} default button "OK" with icon stop'
+    exit 1
+fi
+
+# Check if Rojo is installed
+if ! command -v rojo &> /dev/null; then
+    osascript -e 'display dialog "Rojo is not installed. Please install it using: npm install -g @rojo/rbx" buttons {"OK"} default button "OK" with icon stop'
+    exit 1
+fi
+
+# Create a temporary directory for the game files
+TEMP_DIR=$(mktemp -d)
+GAME_DIR="$TEMP_DIR/MIRAGE"
+
+# Copy game files to temporary directory
+mkdir -p "$GAME_DIR"
+cp -R "$RESOURCES_DIR"/* "$GAME_DIR/"
+
+# Create default.project.json if it doesn't exist
+if [ ! -f "$GAME_DIR/default.project.json" ]; then
+    cat > "$GAME_DIR/default.project.json" << EOL
+{
+    "name": "MIRAGE.EXE",
+    "tree": {
+        "$className": "DataModel",
+        "ReplicatedStorage": {
+            "$className": "ReplicatedStorage",
+            "MIRAGE_MODULES": {
+                "$path": "src/roblox/modules"
+            }
+        },
+        "ServerScriptService": {
+            "$className": "ServerScriptService",
+            "MIRAGE_SCRIPTS": {
+                "$path": "src/roblox/scripts"
+            }
+        },
+        "ServerStorage": {
+            "$className": "ServerStorage",
+            "MIRAGE_DATA": {
+                "$path": "src/roblox/data"
+            }
+        }
+    }
+}
+EOL
+fi
+
+# Start Rojo server in the background
+cd "$GAME_DIR"
+rojo serve default.project.json &
+ROJO_PID=$!
+
+# Wait for Rojo server to start
+sleep 2
+
+# Launch Roblox Studio with the game
+open -a "Roblox Studio" --args -script "$RESOURCES_DIR/load_game.lua"
+
+# Clean up when Roblox Studio is closed
+wait $ROJO_PID
+rm -rf "$TEMP_DIR" 

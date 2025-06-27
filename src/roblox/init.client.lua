@@ -1,91 +1,56 @@
--- MIRAGE.exe - Client Initialization
+-- Main Client Script
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
 
--- Load modules
-local GlitchEffect = require(ReplicatedStorage.Modules.GlitchEffect)
-local PersonalityEffects = require(ReplicatedStorage.Modules.PersonalityEffects)
-local PersonalityResponses = require(ReplicatedStorage.Modules.PersonalityResponses)
-local UIComponents = require(ReplicatedStorage.Modules.UIComponents)
+-- Wait for modules
+local modules = ReplicatedStorage:WaitForChild("Modules")
+local PersonalityState = require(modules:WaitForChild("PersonalityState"))
+local PersonalityResponses = require(modules:WaitForChild("PersonalityResponses"))
+local PersonalityEffects = require(modules:WaitForChild("PersonalityEffects"))
+local GlitchEffect = require(modules:WaitForChild("GlitchEffect"))
+local FileSystem = require(modules:WaitForChild("FileSystem"))
+local CommandSystem = require(modules:WaitForChild("CommandSystem"))
+local TerminalInterface = require(modules:WaitForChild("TerminalInterface"))
+local GameInterface = require(modules:WaitForChild("GameInterface"))
 
-local MIRAGE = ReplicatedStorage:WaitForChild("MIRAGE")
-local States = MIRAGE:WaitForChild("States")
+-- Initialize client
+local function initializeClient()
+    -- Set up personality state
+    PersonalityState.initializeClient()
 
--- Initialize UI
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+    -- Set up file system
+    FileSystem.initializeClient()
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "MIRAGE_UI"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
+    -- Set up command system
+    CommandSystem.initializeClient()
 
--- Create main frame
-local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(1, 0, 1, 0)
-mainFrame.BackgroundTransparency = 1
-mainFrame.Parent = screenGui
+    -- Set up effects
+    PersonalityEffects.initializeClient()
+    GlitchEffect.initializeClient()
 
--- Initialize personality windows
-local personalityWindows = {}
+    -- Create screen GUI
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "MIRAGE.EXE"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
-local function initializePersonalityWindow(personality)
-    local window = UIComponents.createPersonalityWindow(mainFrame, personality, personality)
-    local effects = PersonalityEffects["apply" .. personality .. "Effects"](window)
-    local glitchCleanup = GlitchEffect.applyToScreen(screenGui, 0.1)
+    -- Create main window
+    local mainWindow = GameInterface.createMainWindow(screenGui)
 
-    -- Handle input
-    local inputBox = window:FindFirstChild("InputBox")
-    local textBox = inputBox:FindFirstChild("Input")
-
-    textBox.FocusLost:Connect(function(enterPressed)
-        if enterPressed and textBox.Text ~= "" then
-            -- Add user message
-            window:AddMessage(textBox.Text, true)
-
-            -- Generate and add response
-            local response = PersonalityResponses.generateResponse(personality, textBox.Text)
-            window:AddMessage(response, false)
-
-            -- Update effects based on response
-            if personality == "SABLE" then
-                effects.playTypingSound()
-            elseif personality == "NULL" then
-                effects.playGlitchSound()
-            elseif personality == "HONEY" then
-                effects.playNotificationSound()
-            end
-
-            -- Clear input
-            textBox.Text = ""
-        end
-    end)
-
-    personalityWindows[personality] = {
-        window = window,
-        effects = effects,
-        glitchCleanup = glitchCleanup
-    }
+    -- Create terminal window
+    GameInterface.createTerminalWindow(mainWindow:WaitForChild("Desktop"))
 end
-
--- Initialize all personalities
-initializePersonalityWindow("SABLE")
-initializePersonalityWindow("NULL")
-initializePersonalityWindow("HONEY")
 
 -- Handle cleanup
 game:BindToClose(function()
-    for _, data in pairs(personalityWindows) do
-        data.effects.cleanup()
-        data.glitchCleanup()
-    end
+    -- Clean up client state
+    PersonalityState.cleanupClient()
+    FileSystem.cleanupClient()
+    CommandSystem.cleanupClient()
+    PersonalityEffects.cleanupClient()
+    GlitchEffect.cleanupClient()
 end)
 
--- Add initial messages
-for personality, data in pairs(personalityWindows) do
-    data.window:AddMessage(PersonalityResponses.generateResponse(personality, "hello"), false)
-end
-
-print("MIRAGE.exe client initialized successfully") 
+-- Initialize client
+initializeClient() 

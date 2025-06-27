@@ -1,13 +1,35 @@
 {
   "name": "mirage.exe",
+  "description": "A haunted operating system simulator that blurs the line between reality and digital consciousness",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
+  "keywords": [
+    "horror",
+    "simulation",
+    "operating-system",
+    "ai",
+    "tauri",
+    "react",
+    "typescript",
+    "roblox"
+  ],
+  "author": "MIRAGE.exe Development Team",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "build:macos": "./build_macos.sh",
+    "create:icon": "./create_icon.sh",
+    "deploy:roblox": "./deploy.sh",
+    "push:github": "./push.sh",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint src --ext ts,tsx --fix",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@tauri-apps/api": "^1.5.0",
@@ -34,5 +56,17 @@
     "eslint-plugin-react-refresh": "^0.4.3",
     "typescript": "^5.0.2",
     "vite": "^4.4.4"
-  }
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/mirage.exe.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/mirage.exe/issues"
+  },
+  "homepage": "https://github.com/yourusername/mirage.exe#readme"
 }

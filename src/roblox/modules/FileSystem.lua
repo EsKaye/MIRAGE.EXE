@@ -7,10 +7,10 @@ local HttpService = game:GetService("HttpService")
 
 -- Constants
 local FILE_TYPES = {
-    TEXT = "txt",
-    IMAGE = "png",
-    AUDIO = "mp3",
-    EXECUTABLE = "exe",
+    TEXT = "text",
+    IMAGE = "image",
+    AUDIO = "audio",
+    EXECUTABLE = "executable",
     CORRUPTED = "corrupted"
 }
 
@@ -25,62 +25,69 @@ local FILE_ICONS = {
 -- File system structure
 local fileSystem = {
     root = {
-        name = "C:",
+        name = "root",
         type = "directory",
         children = {
-            ["System"] = {
-                name = "System",
+            ["home"] = {
+                name = "home",
                 type = "directory",
                 children = {
-                    ["config.sys"] = {
-                        name = "config.sys",
+                    ["documents"] = {
+                        name = "documents",
+                        type = "directory",
+                        children = {
+                            ["readme.txt"] = {
+                                name = "readme.txt",
+                                type = FILE_TYPES.TEXT,
+                                content = "Welcome to MIRAGE.exe\n\nThis is a simulated operating system with multiple AI personalities.\n\nType 'help' in the terminal for available commands.",
+                                size = 150,
+                                created = os.time(),
+                                modified = os.time()
+                            }
+                        }
+                    },
+                    ["downloads"] = {
+                        name = "downloads",
+                        type = "directory",
+                        children = {}
+                    },
+                    ["pictures"] = {
+                        name = "pictures",
+                        type = "directory",
+                        children = {}
+                    },
+                    ["music"] = {
+                        name = "music",
+                        type = "directory",
+                        children = {}
+                    }
+                }
+            },
+            ["system"] = {
+                name = "system",
+                type = "directory",
+                children = {
+                    ["config.json"] = {
+                        name = "config.json",
                         type = FILE_TYPES.TEXT,
-                        content = "System configuration file",
-                        size = 1024,
+                        content = "{\n  \"version\": \"1.0.0\",\n  \"personalities\": [\"SABLE\", \"NULL\", \"HONEY\"],\n  \"defaultPersonality\": \"SABLE\"\n}",
+                        size = 100,
                         created = os.time(),
                         modified = os.time()
                     }
                 }
             },
-            ["Users"] = {
-                name = "Users",
+            ["bin"] = {
+                name = "bin",
                 type = "directory",
                 children = {
-                    ["Default"] = {
-                        name = "Default",
-                        type = "directory",
-                        children = {
-                            ["Documents"] = {
-                                name = "Documents",
-                                type = "directory",
-                                children = {}
-                            },
-                            ["Downloads"] = {
-                                name = "Downloads",
-                                type = "directory",
-                                children = {}
-                            }
-                        }
-                    }
-                }
-            },
-            ["Program Files"] = {
-                name = "Program Files",
-                type = "directory",
-                children = {
-                    ["MIRAGE"] = {
-                        name = "MIRAGE",
-                        type = "directory",
-                        children = {
-                            ["MIRAGE.exe"] = {
-                                name = "MIRAGE.exe",
-                                type = FILE_TYPES.EXECUTABLE,
-                                content = "MIRAGE.exe - Haunted Operating System",
-                                size = 2048,
-                                created = os.time(),
-                                modified = os.time()
-                            }
-                        }
+                    ["terminal.exe"] = {
+                        name = "terminal.exe",
+                        type = FILE_TYPES.EXECUTABLE,
+                        content = "TERMINAL_PROGRAM",
+                        size = 500,
+                        created = os.time(),
+                        modified = os.time()
                     }
                 }
             }
@@ -88,48 +95,131 @@ local fileSystem = {
     }
 }
 
+-- Current directory
+local currentDirectory = fileSystem.root
+
 -- Helper functions
-local function getPathParts(path)
+local function splitPath(path)
     local parts = {}
-    for part in string.gmatch(path, "[^/\\]+") do
+    for part in string.gmatch(path, "[^/]+") do
         table.insert(parts, part)
     end
     return parts
 end
 
-local function getNodeByPath(path)
-    local parts = getPathParts(path)
-    local current = fileSystem.root
+local function getNode(path)
+    if path == "/" then
+        return fileSystem.root
+    end
+
+    local parts = splitPath(path)
+    local node = fileSystem.root
 
     for _, part in ipairs(parts) do
-        if not current.children then
+        if not node.children or not node.children[part] then
             return nil
         end
-        current = current.children[part]
-        if not current then
-            return nil
-        end
+        node = node.children[part]
     end
 
-    return current
+    return node
 end
 
--- File operations
-function FileSystem.createFile(path, name, type, content)
-    local parent = getNodeByPath(path)
-    if not parent or parent.type ~= "directory" then
-        return false, "Invalid path or not a directory"
+local function getParentNode(path)
+    if path == "/" then
+        return nil
     end
 
-    if parent.children[name] then
+    local parts = splitPath(path)
+    table.remove(parts)
+    return getNode("/" .. table.concat(parts, "/"))
+end
+
+local function getFileName(path)
+    local parts = splitPath(path)
+    return parts[#parts]
+end
+
+-- Change directory
+function FileSystem.changeDirectory(path)
+    if path == ".." then
+        if currentDirectory == fileSystem.root then
+            return false, "Already at root directory"
+        end
+        currentDirectory = getParentNode(currentDirectory.path)
+        return true
+    end
+
+    local node = getNode(path)
+    if not node then
+        return false, "Directory not found"
+    end
+
+    if node.type ~= "directory" then
+        return false, "Not a directory"
+    end
+
+    currentDirectory = node
+    return true
+end
+
+-- List directory
+function FileSystem.listDirectory(path)
+    local node = path and getNode(path) or currentDirectory
+    if not node then
+        return nil
+    end
+
+    if node.type ~= "directory" then
+        return nil
+    end
+
+    local items = {}
+    for _, child in pairs(node.children) do
+        table.insert(items, {
+            name = child.name,
+            type = child.type,
+            size = child.size,
+            created = child.created,
+            modified = child.modified,
+            icon = FILE_ICONS[child.type] or "📁"
+        })
+    end
+
+    return items
+end
+
+-- Read file
+function FileSystem.readFile(path)
+    local node = getNode(path)
+    if not node then
+        return nil
+    end
+
+    if node.type == "directory" then
+        return nil
+    end
+
+    return node.content
+end
+
+-- Write file
+function FileSystem.writeFile(path, content)
+    local parent = getParentNode(path)
+    if not parent then
+        return false, "Parent directory not found"
+    end
+
+    local fileName = getFileName(path)
+    if parent.children[fileName] then
         return false, "File already exists"
     end
 
-    parent.children[name] = {
-        name = name,
-        type = type,
+    parent.children[fileName] = {
+        name = fileName,
+        type = FILE_TYPES.TEXT,
         content = content,
-        size = content and #content or 0,
+        size = #content,
         created = os.time(),
         modified = os.time()
     }
@@ -137,123 +227,152 @@ function FileSystem.createFile(path, name, type, content)
     return true
 end
 
-function FileSystem.createDirectory(path, name)
-    local parent = getNodeByPath(path)
-    if not parent or parent.type ~= "directory" then
-        return false, "Invalid path or not a directory"
+-- Create directory
+function FileSystem.createDirectory(path)
+    local parent = getParentNode(path)
+    if not parent then
+        return false, "Parent directory not found"
     end
 
-    if parent.children[name] then
+    local dirName = getFileName(path)
+    if parent.children[dirName] then
         return false, "Directory already exists"
     end
 
-    parent.children[name] = {
-        name = name,
+    parent.children[dirName] = {
+        name = dirName,
         type = "directory",
-        children = {}
+        children = {},
+        created = os.time(),
+        modified = os.time()
     }
 
     return true
 end
 
+-- Delete file or directory
 function FileSystem.delete(path)
-    local parts = getPathParts(path)
-    local fileName = table.remove(parts)
-    local parent = getNodeByPath(table.concat(parts, "/"))
+    local parent = getParentNode(path)
+    if not parent then
+        return false, "Parent directory not found"
+    end
 
-    if not parent or not parent.children[fileName] then
+    local name = getFileName(path)
+    if not parent.children[name] then
         return false, "File or directory not found"
     end
 
-    parent.children[fileName] = nil
+    parent.children[name] = nil
     return true
 end
 
-function FileSystem.readFile(path)
-    local node = getNodeByPath(path)
-    if not node or node.type == "directory" then
-        return nil, "File not found or is a directory"
+-- Move file or directory
+function FileSystem.move(source, destination)
+    local sourceNode = getNode(source)
+    if not sourceNode then
+        return false, "Source not found"
     end
 
-    return node.content
-end
-
-function FileSystem.writeFile(path, content)
-    local node = getNodeByPath(path)
-    if not node or node.type == "directory" then
-        return false, "File not found or is a directory"
+    local destParent = getParentNode(destination)
+    if not destParent then
+        return false, "Destination directory not found"
     end
 
-    node.content = content
-    node.size = #content
-    node.modified = os.time()
+    local destName = getFileName(destination)
+    if destParent.children[destName] then
+        return false, "Destination already exists"
+    end
+
+    local sourceParent = getParentNode(source)
+    sourceParent.children[sourceNode.name] = nil
+    destParent.children[destName] = sourceNode
+    sourceNode.name = destName
+
     return true
 end
 
-function FileSystem.listDirectory(path)
-    local node = getNodeByPath(path)
-    if not node or node.type ~= "directory" then
-        return nil, "Directory not found"
+-- Copy file or directory
+function FileSystem.copy(source, destination)
+    local sourceNode = getNode(source)
+    if not sourceNode then
+        return false, "Source not found"
     end
 
-    local items = {}
-    for name, item in pairs(node.children) do
-        table.insert(items, {
-            name = item.name,
-            type = item.type,
-            size = item.size or 0,
-            created = item.created,
-            modified = item.modified,
-            icon = FILE_ICONS[item.type] or "📁"
-        })
+    local destParent = getParentNode(destination)
+    if not destParent then
+        return false, "Destination directory not found"
     end
 
-    return items
+    local destName = getFileName(destination)
+    if destParent.children[destName] then
+        return false, "Destination already exists"
+    end
+
+    local function deepCopy(node)
+        local copy = {
+            name = node.name,
+            type = node.type,
+            created = os.time(),
+            modified = os.time()
+        }
+
+        if node.type == "directory" then
+            copy.children = {}
+            for name, child in pairs(node.children) do
+                copy.children[name] = deepCopy(child)
+            end
+        else
+            copy.content = node.content
+            copy.size = node.size
+        end
+
+        return copy
+    end
+
+    destParent.children[destName] = deepCopy(sourceNode)
+    return true
 end
 
-function FileSystem.getFileInfo(path)
-    local node = getNodeByPath(path)
+-- Get current directory
+function FileSystem.getCurrentDirectory()
+    return currentDirectory
+end
+
+-- Get file type
+function FileSystem.getFileType(path)
+    local node = getNode(path)
     if not node then
-        return nil, "File not found"
+        return nil
+    end
+
+    return node.type
+end
+
+-- Get file info
+function FileSystem.getFileInfo(path)
+    local node = getNode(path)
+    if not node then
+        return nil
     end
 
     return {
         name = node.name,
         type = node.type,
-        size = node.size or 0,
+        size = node.size,
         created = node.created,
         modified = node.modified,
         icon = FILE_ICONS[node.type] or "📁"
     }
 end
 
--- Corruption effects
-function FileSystem.corruptFile(path, intensity)
-    local node = getNodeByPath(path)
-    if not node or node.type == "directory" then
-        return false, "File not found or is a directory"
-    end
+-- Get file types
+function FileSystem.getFileTypes()
+    return FILE_TYPES
+end
 
-    -- Corrupt file content
-    if node.content then
-        local corrupted = ""
-        for i = 1, #node.content do
-            if math.random() < intensity then
-                corrupted = corrupted .. string.char(math.random(33, 126))
-            else
-                corrupted = corrupted .. string.sub(node.content, i, i)
-            end
-        end
-        node.content = corrupted
-    end
-
-    -- Change file type
-    if math.random() < intensity then
-        node.type = FILE_TYPES.CORRUPTED
-    end
-
-    node.modified = os.time()
-    return true
+-- Get file icons
+function FileSystem.getFileIcons()
+    return FILE_ICONS
 end
 
 return FileSystem 

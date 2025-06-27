@@ -1,76 +1,128 @@
 # MIRAGE.EXE Development Roadmap
 
-## Phase 1: Core System Implementation (Current)
-- [x] Basic project structure
+## Phase 1: Core Systems (Current)
+- [x] Basic personality system
 - [x] File system implementation
+- [x] Command system
 - [x] Terminal interface
-- [x] File explorer
-- [x] File viewer
-- [ ] Personality system integration
-- [ ] Glitch effects system
-- [ ] Basic UI components
+- [x] Basic UI components
+- [x] Test system
+- [ ] File Explorer implementation
+- [ ] Settings interface
+- [ ] Help system
 
-## Phase 2: AI Personalities
-### SABLE
-- [ ] Implement core personality traits
-- [ ] Add corruption mechanics
-- [ ] Create unique visual effects
-- [ ] Design interaction patterns
-- [ ] Implement memory system
+## Phase 2: Personality Enhancement
+- [ ] Advanced personality interactions
+  - [ ] Dynamic trust system
+  - [ ] Personality-specific behaviors
+  - [ ] Memory system
+  - [ ] Emotional responses
+- [ ] Personality-specific commands
+- [ ] Personality-specific effects
+- [ ] Personality-specific UI themes
 
-### NULL
-- [ ] Implement aggressive behavior
-- [ ] Add system corruption effects
-- [ ] Create red-themed UI elements
-- [ ] Design combat mechanics
-- [ ] Implement infection system
-
-### HONEY
-- [ ] Implement friendly behavior
-- [ ] Add healing mechanics
-- [ ] Create gold-themed UI elements
-- [ ] Design assistance features
-- [ ] Implement trust system
-
-## Phase 3: Game Mechanics
-- [ ] Corruption spread system
-- [ ] Trust/relationship mechanics
-- [ ] Resource management
-- [ ] Combat system
-- [ ] Healing/repair mechanics
-- [ ] Achievement system
-
-## Phase 4: Visual and Audio
+## Phase 3: Visual Effects
 - [ ] Enhanced glitch effects
-- [ ] Personality-specific themes
-- [ ] Dynamic UI animations
-- [ ] Sound effects system
-- [ ] Background music
-- [ ] Voice lines
+  - [ ] Screen distortion
+  - [ ] Color manipulation
+  - [ ] Audio glitches
+  - [ ] Particle effects
+- [ ] Personality-specific visual themes
+- [ ] Dynamic effect system
+- [ ] Effect combinations
 
-## Phase 5: Content and Story
+## Phase 4: File System Enhancement
+- [ ] Advanced file operations
+  - [ ] File encryption/decryption
+  - [ ] File compression
+  - [ ] File recovery
+- [ ] File type support
+  - [ ] Image viewer
+  - [ ] Text editor
+  - [ ] Audio player
+- [ ] File system security
+- [ ] File system corruption
+
+## Phase 5: Security & Corruption
+- [ ] Security system
+  - [ ] Access control
+  - [ ] Permission system
+  - [ ] Security breaches
+- [ ] Corruption system
+  - [ ] File corruption
+  - [ ] System corruption
+  - [ ] Recovery mechanics
+
+## Phase 6: User Experience
+- [ ] Tutorial system
+- [ ] Achievement system
+- [ ] Progress tracking
+- [ ] User preferences
+- [ ] Accessibility features
+
+## Phase 7: Multiplayer Features
+- [ ] Player interactions
+- [ ] Shared file system
+- [ ] Multiplayer effects
+- [ ] Chat system
+
+## Phase 8: Content & Story
 - [ ] Main storyline
 - [ ] Side quests
-- [ ] Character backstories
-- [ ] Environmental storytelling
-- [ ] Hidden secrets
-- [ ] Multiple endings
+- [ ] Hidden content
+- [ ] Easter eggs
 
-## Phase 6: Polish and Optimization
+## Phase 9: Polish & Optimization
 - [ ] Performance optimization
 - [ ] Bug fixes
-- [ ] UI/UX improvements
-- [ ] Balance adjustments
-- [ ] Quality assurance
-- [ ] Final testing
+- [ ] UI polish
+- [ ] Sound design
+- [ ] Visual polish
 
-## Phase 7: Release and Post-Launch
-- [ ] Beta testing
-- [ ] Community feedback
-- [ ] Bug fixes and patches
-- [ ] Content updates
-- [ ] Community features
+## Phase 10: Release & Support
 - [ ] Documentation
+- [ ] User guides
+- [ ] Community features
+- [ ] Update system
+- [ ] Support system
+
+## Current Focus: Phase 1 - Core Systems
+### Immediate Tasks:
+1. [ ] Implement File Explorer
+   - [ ] Directory navigation
+   - [ ] File operations
+   - [ ] File preview
+   - [ ] Context menu
+
+2. [ ] Create Settings Interface
+   - [ ] Visual settings
+   - [ ] Audio settings
+   - [ ] Control settings
+   - [ ] Personality settings
+
+3. [ ] Develop Help System
+   - [ ] Command documentation
+   - [ ] System documentation
+   - [ ] Interactive tutorials
+   - [ ] FAQ section
+
+### Next Steps:
+1. Begin File Explorer implementation
+2. Design Settings interface
+3. Create Help system structure
+4. Integrate all components
+5. Test and debug
+6. Move to Phase 2
+
+## Development Guidelines
+- Maintain modular architecture
+- Follow documentation standards
+- Implement comprehensive testing
+- Ensure cross-module compatibility
+- Prioritize user experience
+- Keep security in mind
+- Document all changes
+- Regular testing and validation
 
 ## Technical Tasks
 

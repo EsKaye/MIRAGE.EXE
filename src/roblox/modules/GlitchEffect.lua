@@ -1,208 +1,213 @@
 -- GlitchEffect Module
 local GlitchEffect = {}
 
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
 -- Constants
-local GLITCH_COLORS = {
-    Color3.fromRGB(255, 0, 255),   -- Magenta
-    Color3.fromRGB(0, 255, 255),   -- Cyan
-    Color3.fromRGB(255, 255, 0)    -- Yellow
+local GLITCH_TYPES = {
+    POSITION = "position",
+    COLOR = "color",
+    TEXTURE = "texture",
+    AUDIO = "audio"
 }
 
+-- Glitch configurations
+local GLITCH_CONFIGS = {
+    position = {
+        intensity = 0.1,
+        frequency = 0.5,
+        duration = 0.2
+    },
+    color = {
+        intensity = 0.3,
+        frequency = 0.3,
+        duration = 0.3
+    },
+    texture = {
+        intensity = 0.5,
+        frequency = 0.4,
+        duration = 0.4
+    },
+    audio = {
+        intensity = 0.2,
+        frequency = 0.6,
+        duration = 0.1
+    }
+}
+
+-- Active glitches
+local activeGlitches = {}
+
 -- Helper functions
-local function randomColor()
-    return GLITCH_COLORS[math.random(1, #GLITCH_COLORS)]
-end
+local function createGlitchObject(parent, glitchType)
+    local glitch = Instance.new("Frame")
+    glitch.Name = "Glitch_" .. glitchType
+    glitch.Size = UDim2.new(1, 0, 1, 0)
+    glitch.BackgroundTransparency = 1
+    glitch.Parent = parent
 
-local function randomOffset()
-    return math.random(-5, 5)
-end
-
--- Apply glitch effect to text
-function GlitchEffect.applyToText(textLabel, intensity)
-    if not textLabel:IsA("TextLabel") and not textLabel:IsA("TextButton") then
-        return
+    if glitchType == GLITCH_TYPES.POSITION then
+        local positionEffect = Instance.new("Frame")
+        positionEffect.Name = "PositionEffect"
+        positionEffect.Size = UDim2.new(1, 0, 1, 0)
+        positionEffect.BackgroundTransparency = 1
+        positionEffect.Parent = glitch
+    elseif glitchType == GLITCH_TYPES.COLOR then
+        local colorEffect = Instance.new("ColorCorrectionEffect")
+        colorEffect.Name = "ColorEffect"
+        colorEffect.Parent = glitch
+    elseif glitchType == GLITCH_TYPES.TEXTURE then
+        local textureEffect = Instance.new("Frame")
+        textureEffect.Name = "TextureEffect"
+        textureEffect.Size = UDim2.new(1, 0, 1, 0)
+        textureEffect.BackgroundTransparency = 1
+        textureEffect.Parent = glitch
+    elseif glitchType == GLITCH_TYPES.AUDIO then
+        local audioEffect = Instance.new("Sound")
+        audioEffect.Name = "AudioEffect"
+        audioEffect.Parent = glitch
     end
 
-    local originalText = textLabel.Text
-    local originalColor = textLabel.TextColor3
-    local originalPosition = textLabel.Position
+    return glitch
+end
 
-    -- Create glitch copies
-    local copies = {}
-    for i = 1, 3 do
-        local copy = textLabel:Clone()
-        copy.Parent = textLabel.Parent
-        copy.TextColor3 = randomColor()
-        copy.Position = UDim2.new(
-            originalPosition.X.Scale,
-            originalPosition.X.Offset + randomOffset(),
-            originalPosition.Y.Scale,
-            originalPosition.Y.Offset + randomOffset()
-        )
-        copy.TextTransparency = 0.5
-        table.insert(copies, copy)
+-- Apply glitch
+function GlitchEffect.applyGlitch(parent, glitchType, intensity, frequency)
+    if not GLITCH_TYPES[glitchType] then
+        return nil, "Invalid glitch type"
     end
 
-    -- Animate glitch
-    spawn(function()
-        while true do
-            wait(0.1 * (1 - intensity))
-            
-            -- Randomly modify original text
-            if math.random() < intensity then
-                textLabel.Text = string.gsub(originalText, ".", function()
-                    return math.random() < 0.1 and string.char(math.random(33, 126)) or ""
-                end)
-            else
-                textLabel.Text = originalText
-            end
+    local config = GLITCH_CONFIGS[glitchType]
+    intensity = intensity or config.intensity
+    frequency = frequency or config.frequency
 
-            -- Update copies
-            for _, copy in ipairs(copies) do
-                copy.TextColor3 = randomColor()
-                copy.Position = UDim2.new(
-                    originalPosition.X.Scale,
-                    originalPosition.X.Offset + randomOffset(),
-                    originalPosition.Y.Scale,
-                    originalPosition.Y.Offset + randomOffset()
+    local glitch = createGlitchObject(parent, glitchType)
+    activeGlitches[glitch.Name] = {
+        object = glitch,
+        type = glitchType,
+        intensity = intensity,
+        frequency = frequency,
+        startTime = os.time()
+    }
+
+    -- Start glitch effect
+    if glitchType == GLITCH_TYPES.POSITION then
+        RunService:BindToRenderStep(glitch.Name, 1, function()
+            local effect = glitch:FindFirstChild("PositionEffect")
+            if effect then
+                effect.Position = UDim2.new(
+                    math.random(-intensity, intensity),
+                    0,
+                    math.random(-intensity, intensity),
+                    0
                 )
             end
-        end
-    end)
-
-    -- Cleanup function
-    return function()
-        for _, copy in ipairs(copies) do
-            copy:Destroy()
-        end
-        textLabel.Text = originalText
-        textLabel.TextColor3 = originalColor
-        textLabel.Position = originalPosition
-    end
-end
-
--- Apply glitch effect to frame
-function GlitchEffect.applyToFrame(frame, intensity)
-    if not frame:IsA("Frame") and not frame:IsA("ImageLabel") then
-        return
-    end
-
-    local originalColor = frame.BackgroundColor3
-    local originalPosition = frame.Position
-    local originalSize = frame.Size
-
-    -- Create glitch copies
-    local copies = {}
-    for i = 1, 2 do
-        local copy = frame:Clone()
-        copy.Parent = frame.Parent
-        copy.BackgroundColor3 = randomColor()
-        copy.BackgroundTransparency = 0.7
-        copy.Position = UDim2.new(
-            originalPosition.X.Scale,
-            originalPosition.X.Offset + randomOffset(),
-            originalPosition.Y.Scale,
-            originalPosition.Y.Offset + randomOffset()
-        )
-        table.insert(copies, copy)
-    end
-
-    -- Animate glitch
-    spawn(function()
-        while true do
-            wait(0.2 * (1 - intensity))
-            
-            -- Randomly modify original frame
-            if math.random() < intensity then
-                frame.BackgroundColor3 = randomColor()
-                frame.Position = UDim2.new(
-                    originalPosition.X.Scale,
-                    originalPosition.X.Offset + randomOffset(),
-                    originalPosition.Y.Scale,
-                    originalPosition.Y.Offset + randomOffset()
-                )
-            else
-                frame.BackgroundColor3 = originalColor
-                frame.Position = originalPosition
-            end
-
-            -- Update copies
-            for _, copy in ipairs(copies) do
-                copy.BackgroundColor3 = randomColor()
-                copy.Position = UDim2.new(
-                    originalPosition.X.Scale,
-                    originalPosition.X.Offset + randomOffset(),
-                    originalPosition.Y.Scale,
-                    originalPosition.Y.Offset + randomOffset()
+        end)
+    elseif glitchType == GLITCH_TYPES.COLOR then
+        RunService:BindToRenderStep(glitch.Name, 1, function()
+            local effect = glitch:FindFirstChild("ColorEffect")
+            if effect then
+                effect.TintColor = Color3.new(
+                    math.random(),
+                    math.random(),
+                    math.random()
                 )
             end
+        end)
+    elseif glitchType == GLITCH_TYPES.TEXTURE then
+        RunService:BindToRenderStep(glitch.Name, 1, function()
+            local effect = glitch:FindFirstChild("TextureEffect")
+            if effect then
+                effect.BackgroundTransparency = math.random()
+            end
+        end)
+    elseif glitchType == GLITCH_TYPES.AUDIO then
+        local effect = glitch:FindFirstChild("AudioEffect")
+        if effect then
+            effect.Volume = intensity
+            effect.PlaybackSpeed = 1 + (math.random() * 2 - 1) * intensity
+            effect:Play()
         end
-    end)
-
-    -- Cleanup function
-    return function()
-        for _, copy in ipairs(copies) do
-            copy:Destroy()
-        end
-        frame.BackgroundColor3 = originalColor
-        frame.Position = originalPosition
-        frame.Size = originalSize
     end
+
+    return glitch
 end
 
--- Apply screen glitch effect
-function GlitchEffect.applyToScreen(screenGui, intensity)
-    local glitchFrame = Instance.new("Frame")
-    glitchFrame.Name = "GlitchOverlay"
-    glitchFrame.Size = UDim2.new(1, 0, 1, 0)
-    glitchFrame.BackgroundTransparency = 1
-    glitchFrame.Parent = screenGui
-
-    -- Create scan lines
-    for i = 1, 20 do
-        local line = Instance.new("Frame")
-        line.Name = "ScanLine" .. i
-        line.Size = UDim2.new(1, 0, 0, 1)
-        line.Position = UDim2.new(0, 0, 0, (i - 1) * 0.05)
-        line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        line.BackgroundTransparency = 0.9
-        line.Parent = glitchFrame
+-- Remove glitch
+function GlitchEffect.removeGlitch(glitchName)
+    local glitch = activeGlitches[glitchName]
+    if not glitch then
+        return false, "Glitch not found"
     end
 
-    -- Animate glitch
-    spawn(function()
-        while true do
-            wait(0.1 * (1 - intensity))
-            
-            if math.random() < intensity then
-                -- Random scan line glitch
-                for _, line in ipairs(glitchFrame:GetChildren()) do
-                    if math.random() < 0.3 then
-                        line.BackgroundTransparency = math.random() * 0.5
-                        line.BackgroundColor3 = randomColor()
-                    end
-                end
+    RunService:UnbindFromRenderStep(glitchName)
+    glitch.object:Destroy()
+    activeGlitches[glitchName] = nil
+    return true, "Glitch removed"
+end
 
-                -- Screen shake
-                if math.random() < 0.2 then
-                    local originalPosition = screenGui.Position
-                    screenGui.Position = UDim2.new(
-                        originalPosition.X.Scale,
-                        originalPosition.X.Offset + randomOffset(),
-                        originalPosition.Y.Scale,
-                        originalPosition.Y.Offset + randomOffset()
-                    )
-                    wait(0.05)
-                    screenGui.Position = originalPosition
-                end
-            end
+-- Update glitch
+function GlitchEffect.updateGlitch(glitchName, properties)
+    local glitch = activeGlitches[glitchName]
+    if not glitch then
+        return false, "Glitch not found"
+    end
+
+    for property, value in pairs(properties) do
+        glitch[property] = value
+    end
+
+    return true, "Glitch updated"
+end
+
+-- Get glitch
+function GlitchEffect.getGlitch(glitchName)
+    return activeGlitches[glitchName]
+end
+
+-- Get all glitches
+function GlitchEffect.getAllGlitches()
+    return activeGlitches
+end
+
+-- Get glitch types
+function GlitchEffect.getGlitchTypes()
+    return GLITCH_TYPES
+end
+
+-- Get glitch configs
+function GlitchEffect.getGlitchConfigs()
+    return GLITCH_CONFIGS
+end
+
+-- Apply random glitch
+function GlitchEffect.applyRandomGlitch(parent, intensity)
+    local glitchType = GLITCH_TYPES[math.random(1, #GLITCH_TYPES)]
+    return GlitchEffect.applyGlitch(parent, glitchType, intensity)
+end
+
+-- Apply multiple glitches
+function GlitchEffect.applyMultipleGlitches(parent, glitchTypes, intensity)
+    local glitches = {}
+    for _, glitchType in ipairs(glitchTypes) do
+        local glitch = GlitchEffect.applyGlitch(parent, glitchType, intensity)
+        if glitch then
+            table.insert(glitches, glitch)
         end
-    end)
-
-    -- Cleanup function
-    return function()
-        glitchFrame:Destroy()
     end
+    return glitches
+end
+
+-- Cleanup
+function GlitchEffect.cleanup()
+    for glitchName, glitch in pairs(activeGlitches) do
+        RunService:UnbindFromRenderStep(glitchName)
+        glitch.object:Destroy()
+    end
+    activeGlitches = {}
 end
 
 return GlitchEffect 

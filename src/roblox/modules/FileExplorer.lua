@@ -4,245 +4,356 @@ local FileExplorer = {}
 -- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
--- Load modules
-local FileSystem = require(ReplicatedStorage.Modules.FileSystem)
-local GlitchEffect = require(ReplicatedStorage.Modules.GlitchEffect)
+-- Modules
+local FileSystem = require(script.Parent.FileSystem)
+local UIComponents = require(script.Parent.UIComponents)
+local PersonalityEffects = require(script.Parent.PersonalityEffects)
 
 -- Constants
-local ITEM_HEIGHT = 30
-local ITEM_PADDING = 5
-local ICON_SIZE = 20
+local EXPLORER_DEFAULTS = {
+    width = 800,
+    height = 600,
+    titleHeight = 30,
+    padding = 10,
+    cornerRadius = 8,
+    backgroundColor = Color3.fromRGB(20, 20, 20),
+    titleColor = Color3.fromRGB(30, 30, 30),
+    textColor = Color3.fromRGB(0, 255, 0),
+    hoverColor = Color3.fromRGB(40, 40, 40),
+    selectedColor = Color3.fromRGB(60, 60, 60),
+    iconSize = 32,
+    itemHeight = 40,
+    maxPathLength = 50
+}
+
+-- State
+local currentPath = "/"
+local selectedItems = {}
+local sortOrder = "name"
+local viewMode = "list" -- list or grid
+local searchQuery = ""
 
 -- Helper functions
-local function createItemFrame(parent, item)
-    local frame = Instance.new("Frame")
-    frame.Name = item.name
-    frame.Size = UDim2.new(1, 0, 0, ITEM_HEIGHT)
-    frame.BackgroundTransparency = 1
-
-    local icon = Instance.new("TextLabel")
-    icon.Name = "Icon"
-    icon.Size = UDim2.new(0, ICON_SIZE, 1, 0)
-    icon.Position = UDim2.new(0, ITEM_PADDING, 0, 0)
+local function createIcon(iconType)
+    local icon = Instance.new("ImageLabel")
+    icon.Size = UDim2.new(0, EXPLORER_DEFAULTS.iconSize, 0, EXPLORER_DEFAULTS.iconSize)
     icon.BackgroundTransparency = 1
-    icon.Text = item.icon
-    icon.TextSize = 16
-    icon.Font = Enum.Font.Code
-    icon.TextXAlignment = Enum.TextXAlignment.Left
+    icon.Image = FileSystem.getFileIcon(iconType)
+    return icon
+end
+
+local function createItemFrame(name, type, isDirectory)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, EXPLORER_DEFAULTS.itemHeight)
+    frame.BackgroundColor3 = EXPLORER_DEFAULTS.backgroundColor
+    frame.BorderSizePixel = 0
+    
+    -- Add corner
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, EXPLORER_DEFAULTS.cornerRadius)
+    corner.Parent = frame
+    
+    -- Add icon
+    local icon = createIcon(type)
+    icon.Position = UDim2.new(0, EXPLORER_DEFAULTS.padding, 0.5, -EXPLORER_DEFAULTS.iconSize/2)
     icon.Parent = frame
-
-    local name = Instance.new("TextLabel")
-    name.Name = "Name"
-    name.Size = UDim2.new(1, -ICON_SIZE - ITEM_PADDING * 3, 1, 0)
-    name.Position = UDim2.new(0, ICON_SIZE + ITEM_PADDING * 2, 0, 0)
-    name.BackgroundTransparency = 1
-    name.Text = item.name
-    name.TextSize = 14
-    name.Font = Enum.Font.Code
-    name.TextXAlignment = Enum.TextXAlignment.Left
-    name.TextYAlignment = Enum.TextYAlignment.Center
-    name.Parent = frame
-
-    local size = Instance.new("TextLabel")
-    size.Name = "Size"
-    size.Size = UDim2.new(0, 100, 1, 0)
-    size.Position = UDim2.new(1, -100, 0, 0)
-    size.BackgroundTransparency = 1
-    size.Text = item.type == "directory" and "" or string.format("%d bytes", item.size)
-    size.TextSize = 12
-    size.Font = Enum.Font.Code
-    size.TextXAlignment = Enum.TextXAlignment.Right
-    size.TextYAlignment = Enum.TextYAlignment.Center
-    size.Parent = frame
-
-    frame.Parent = parent
+    
+    -- Add name label
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -EXPLORER_DEFAULTS.iconSize - EXPLORER_DEFAULTS.padding * 3, 1, 0)
+    label.Position = UDim2.new(0, EXPLORER_DEFAULTS.iconSize + EXPLORER_DEFAULTS.padding * 2, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = EXPLORER_DEFAULTS.textColor
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextYAlignment = Enum.TextYAlignment.Center
+    label.Font = Enum.Font.Code
+    label.TextSize = 14
+    label.Parent = frame
+    
+    -- Add hover effect
+    local function onHover()
+        if not selectedItems[name] then
+            TweenService:Create(frame, TweenInfo.new(0.2), {
+                BackgroundColor3 = EXPLORER_DEFAULTS.hoverColor
+            }):Play()
+        end
+    end
+    
+    local function onUnhover()
+        if not selectedItems[name] then
+            TweenService:Create(frame, TweenInfo.new(0.2), {
+                BackgroundColor3 = EXPLORER_DEFAULTS.backgroundColor
+            }):Play()
+        end
+    end
+    
+    frame.MouseEnter:Connect(onHover)
+    frame.MouseLeave:Connect(onUnhover)
+    
+    -- Add click handler
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+                -- Toggle selection
+                selectedItems[name] = not selectedItems[name]
+                frame.BackgroundColor3 = selectedItems[name] and EXPLORER_DEFAULTS.selectedColor or EXPLORER_DEFAULTS.backgroundColor
+            else
+                -- Clear other selections and select this
+                for itemName, _ in pairs(selectedItems) do
+                    selectedItems[itemName] = false
+                end
+                selectedItems[name] = true
+                frame.BackgroundColor3 = EXPLORER_DEFAULTS.selectedColor
+                
+                -- If directory, navigate to it
+                if isDirectory then
+                    navigateTo(currentPath .. name .. "/")
+                end
+            end
+        elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+            -- Show context menu
+            showContextMenu(frame, name, type, isDirectory)
+        end
+    end)
+    
     return frame
 end
 
--- Create file explorer window
-function FileExplorer.createWindow(parent, title)
-    -- Create main window
-    local window = Instance.new("Frame")
-    window.Name = "FileExplorer"
-    window.Size = UDim2.new(0.4, 0, 0.6, 0)
-    window.Position = UDim2.new(0.3, 0, 0.2, 0)
-    window.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    window.BorderSizePixel = 1
-    window.BorderColor3 = Color3.fromRGB(100, 100, 100)
-    window.Parent = parent
-
-    -- Create title bar
-    local titleBar = Instance.new("Frame")
-    titleBar.Name = "TitleBar"
-    titleBar.Size = UDim2.new(1, 0, 0, 30)
-    titleBar.Position = UDim2.new(0, 0, 0, 0)
-    titleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    titleBar.BorderSizePixel = 0
-    titleBar.Parent = window
-
-    local titleText = Instance.new("TextLabel")
-    titleText.Name = "Title"
-    titleText.Size = UDim2.new(1, -20, 1, 0)
-    titleText.Position = UDim2.new(0, 10, 0, 0)
-    titleText.BackgroundTransparency = 1
-    titleText.Text = title
-    titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleText.TextSize = 14
-    titleText.Font = Enum.Font.Code
-    titleText.TextXAlignment = Enum.TextXAlignment.Left
-    titleText.Parent = titleBar
-
-    -- Create path bar
-    local pathBar = Instance.new("Frame")
-    pathBar.Name = "PathBar"
-    pathBar.Size = UDim2.new(1, 0, 0, 30)
-    pathBar.Position = UDim2.new(0, 0, 0, 30)
-    pathBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    pathBar.BorderSizePixel = 0
-    pathBar.Parent = window
-
-    local pathText = Instance.new("TextLabel")
-    pathText.Name = "Path"
-    pathText.Size = UDim2.new(1, -20, 1, 0)
-    pathText.Position = UDim2.new(0, 10, 0, 0)
-    pathText.BackgroundTransparency = 1
-    pathText.Text = "C:"
-    pathText.TextColor3 = Color3.fromRGB(200, 200, 200)
-    pathText.TextSize = 12
-    pathText.Font = Enum.Font.Code
-    pathText.TextXAlignment = Enum.TextXAlignment.Left
-    pathText.Parent = pathBar
-
-    -- Create content area
-    local contentArea = Instance.new("ScrollingFrame")
-    contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, 0, 1, -60)
-    contentArea.Position = UDim2.new(0, 0, 0, 60)
-    contentArea.BackgroundTransparency = 1
-    contentArea.BorderSizePixel = 0
-    contentArea.ScrollBarThickness = 6
-    contentArea.CanvasSize = UDim2.new(0, 0, 0, 0)
-    contentArea.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    contentArea.Parent = window
-
-    local uiListLayout = Instance.new("UIListLayout")
-    uiListLayout.Padding = UDim.new(0, ITEM_PADDING)
-    uiListLayout.Parent = contentArea
-
-    -- Make window draggable
-    local dragging
-    local dragInput
-    local dragStart
-    local startPos
-
-    local function updateDrag(input)
-        local delta = input.Position - dragStart
-        window.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-    end
-
-    titleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = window.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    titleBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            updateDrag(input)
-        end
-    end)
-
-    -- Navigation functions
-    local currentPath = "C:"
-
-    local function updatePath(path)
-        currentPath = path
-        pathText.Text = path
-
-        -- Clear content area
-        for _, child in ipairs(contentArea:GetChildren()) do
-            if child:IsA("Frame") then
-                child:Destroy()
+local function showContextMenu(parent, name, type, isDirectory)
+    local menu = Instance.new("Frame")
+    menu.Size = UDim2.new(0, 200, 0, 0)
+    menu.Position = UDim2.new(0, parent.AbsolutePosition.X, 0, parent.AbsolutePosition.Y)
+    menu.BackgroundColor3 = EXPLORER_DEFAULTS.backgroundColor
+    menu.BorderSizePixel = 0
+    
+    -- Add corner
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, EXPLORER_DEFAULTS.cornerRadius)
+    corner.Parent = menu
+    
+    -- Add menu items
+    local items = {
+        {text = "Open", action = function()
+            if isDirectory then
+                navigateTo(currentPath .. name .. "/")
+            else
+                openFile(currentPath .. name)
             end
-        end
-
-        -- Load directory contents
-        local items = FileSystem.listDirectory(path)
-        if items then
-            for _, item in ipairs(items) do
-                local itemFrame = createItemFrame(contentArea, item)
-                
-                -- Handle item click
-                itemFrame.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        if item.type == "directory" then
-                            updatePath(currentPath .. "/" .. item.name)
-                        else
-                            -- Handle file click
-                            local content = FileSystem.readFile(currentPath .. "/" .. item.name)
-                            if content then
-                                -- TODO: Open file viewer
-                            end
-                        end
-                    end
-                end)
-            end
-        end
-    end
-
-    -- Initialize with root directory
-    updatePath(currentPath)
-
-    -- Add navigation buttons
-    local backButton = Instance.new("TextButton")
-    backButton.Name = "BackButton"
-    backButton.Size = UDim2.new(0, 60, 0, 20)
-    backButton.Position = UDim2.new(0, 10, 0, 5)
-    backButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    backButton.BorderSizePixel = 0
-    backButton.Text = "Back"
-    backButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    backButton.TextSize = 12
-    backButton.Font = Enum.Font.Code
-    backButton.Parent = pathBar
-
-    backButton.MouseButton1Click:Connect(function()
-        local parentPath = currentPath:match("(.*)/[^/]*$")
-        if parentPath then
-            updatePath(parentPath)
-        end
-    end)
-
-    -- Add corruption effects
-    local glitchCleanup = GlitchEffect.applyToScreen(window, 0.1)
-
-    return {
-        window = window,
-        updatePath = updatePath,
-        cleanup = function()
-            glitchCleanup()
-        end
+        end},
+        {text = "Copy", action = function()
+            -- TODO: Implement copy
+        end},
+        {text = "Cut", action = function()
+            -- TODO: Implement cut
+        end},
+        {text = "Delete", action = function()
+            -- TODO: Implement delete
+        end},
+        {text = "Rename", action = function()
+            -- TODO: Implement rename
+        end}
     }
+    
+    local yOffset = 0
+    for _, item in ipairs(items) do
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, 0, 0, 30)
+        button.Position = UDim2.new(0, 0, 0, yOffset)
+        button.BackgroundColor3 = EXPLORER_DEFAULTS.backgroundColor
+        button.BorderSizePixel = 0
+        button.Text = item.text
+        button.TextColor3 = EXPLORER_DEFAULTS.textColor
+        button.Font = Enum.Font.Code
+        button.TextSize = 14
+        button.Parent = menu
+        
+        -- Add hover effect
+        button.MouseEnter:Connect(function()
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                BackgroundColor3 = EXPLORER_DEFAULTS.hoverColor
+            }):Play()
+        end)
+        
+        button.MouseLeave:Connect(function()
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                BackgroundColor3 = EXPLORER_DEFAULTS.backgroundColor
+            }):Play()
+        end)
+        
+        -- Add click handler
+        button.MouseButton1Click:Connect(function()
+            item.action()
+            menu:Destroy()
+        end)
+        
+        yOffset = yOffset + 30
+    end
+    
+    menu.Size = UDim2.new(0, 200, 0, yOffset)
+    menu.Parent = parent.Parent
+end
+
+local function updatePathDisplay(pathDisplay)
+    local displayText = currentPath
+    if #displayText > EXPLORER_DEFAULTS.maxPathLength then
+        displayText = "..." .. displayText:sub(-EXPLORER_DEFAULTS.maxPathLength + 3)
+    end
+    pathDisplay.Text = displayText
+end
+
+local function updateFileList(fileList)
+    -- Clear existing items
+    for _, child in ipairs(fileList:GetChildren()) do
+        child:Destroy()
+    end
+    
+    -- Get directory contents
+    local items = FileSystem.listDirectory(currentPath)
+    if not items then return end
+    
+    -- Sort items
+    table.sort(items, function(a, b)
+        if a.isDirectory ~= b.isDirectory then
+            return a.isDirectory
+        end
+        if sortOrder == "name" then
+            return a.name:lower() < b.name:lower()
+        elseif sortOrder == "type" then
+            return a.type < b.type
+        elseif sortOrder == "date" then
+            return a.modified > b.modified
+        end
+    end)
+    
+    -- Filter by search query
+    if searchQuery ~= "" then
+        local filtered = {}
+        for _, item in ipairs(items) do
+            if item.name:lower():find(searchQuery:lower()) then
+                table.insert(filtered, item)
+            end
+        end
+        items = filtered
+    end
+    
+    -- Create item frames
+    local yOffset = 0
+    for _, item in ipairs(items) do
+        local frame = createItemFrame(item.name, item.type, item.isDirectory)
+        frame.Position = UDim2.new(0, 0, 0, yOffset)
+        frame.Parent = fileList
+        yOffset = yOffset + EXPLORER_DEFAULTS.itemHeight
+    end
+    
+    -- Update fileList size
+    fileList.CanvasSize = UDim2.new(0, 0, 0, yOffset)
+end
+
+local function navigateTo(path)
+    if FileSystem.changeDirectory(path) then
+        currentPath = path
+        -- Update UI
+        -- TODO: Implement UI updates
+    end
+end
+
+local function openFile(path)
+    local info = FileSystem.getFileInfo(path)
+    if not info then return end
+    
+    -- TODO: Implement file opening based on type
+    print("Opening file:", path)
+end
+
+-- Main function to create the explorer window
+function FileExplorer.createWindow()
+    -- Create main frame
+    local frame = UIComponents.createWindow({
+        title = "File Explorer",
+        width = EXPLORER_DEFAULTS.width,
+        height = EXPLORER_DEFAULTS.height,
+        titleHeight = EXPLORER_DEFAULTS.titleHeight,
+        padding = EXPLORER_DEFAULTS.padding,
+        cornerRadius = EXPLORER_DEFAULTS.cornerRadius,
+        backgroundColor = EXPLORER_DEFAULTS.backgroundColor,
+        titleColor = EXPLORER_DEFAULTS.titleColor,
+        textColor = EXPLORER_DEFAULTS.textColor
+    })
+    
+    -- Create toolbar
+    local toolbar = Instance.new("Frame")
+    toolbar.Size = UDim2.new(1, 0, 0, 40)
+    toolbar.Position = UDim2.new(0, 0, 0, EXPLORER_DEFAULTS.titleHeight)
+    toolbar.BackgroundColor3 = EXPLORER_DEFAULTS.titleColor
+    toolbar.BorderSizePixel = 0
+    toolbar.Parent = frame
+    
+    -- Add back button
+    local backButton = UIComponents.createButton({
+        text = "←",
+        size = UDim2.new(0, 40, 1, 0),
+        position = UDim2.new(0, EXPLORER_DEFAULTS.padding, 0, 0),
+        parent = toolbar
+    })
+    
+    -- Add path display
+    local pathDisplay = Instance.new("TextLabel")
+    pathDisplay.Size = UDim2.new(1, -100, 1, 0)
+    pathDisplay.Position = UDim2.new(0, 50, 0, 0)
+    pathDisplay.BackgroundTransparency = 1
+    pathDisplay.Text = currentPath
+    pathDisplay.TextColor3 = EXPLORER_DEFAULTS.textColor
+    pathDisplay.TextXAlignment = Enum.TextXAlignment.Left
+    pathDisplay.TextYAlignment = Enum.TextYAlignment.Center
+    pathDisplay.Font = Enum.Font.Code
+    pathDisplay.TextSize = 14
+    pathDisplay.Parent = toolbar
+    
+    -- Add search box
+    local searchBox = UIComponents.createTextInput({
+        placeholder = "Search...",
+        size = UDim2.new(0, 200, 0, 30),
+        position = UDim2.new(1, -210, 0.5, -15),
+        parent = toolbar
+    })
+    
+    -- Create file list
+    local fileList = Instance.new("ScrollingFrame")
+    fileList.Size = UDim2.new(1, 0, 1, -EXPLORER_DEFAULTS.titleHeight - 40)
+    fileList.Position = UDim2.new(0, 0, 0, EXPLORER_DEFAULTS.titleHeight + 40)
+    fileList.BackgroundTransparency = 1
+    fileList.BorderSizePixel = 0
+    fileList.ScrollBarThickness = 6
+    fileList.ScrollingDirection = Enum.ScrollingDirection.Y
+    fileList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    fileList.Parent = frame
+    
+    -- Add list layout
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 2)
+    listLayout.Parent = fileList
+    
+    -- Connect events
+    backButton.MouseButton1Click:Connect(function()
+        local parentPath = currentPath:match("(.*/)[^/]*/$")
+        if parentPath then
+            navigateTo(parentPath)
+        end
+    end)
+    
+    searchBox.FocusLost:Connect(function()
+        searchQuery = searchBox.Text
+        updateFileList(fileList)
+    end)
+    
+    -- Initial update
+    updatePathDisplay(pathDisplay)
+    updateFileList(fileList)
+    
+    return frame
 end
 
 return FileExplorer 

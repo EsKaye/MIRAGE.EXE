@@ -1,189 +1,249 @@
 -- PersonalityResponses Module
 local PersonalityResponses = {}
 
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+
 -- Constants
+local RESPONSE_TYPES = {
+    GREETING = "greeting",
+    FAREWELL = "farewell",
+    HELP = "help",
+    ERROR = "error",
+    SUCCESS = "success",
+    WARNING = "warning",
+    CORRUPTION = "corruption",
+    TRUST = "trust"
+}
+
+-- Response templates
 local RESPONSES = {
     SABLE = {
-        GREETING = {
-            "Hello, user. How may I assist you today?",
-            "Greetings. I am SABLE, your system assistant.",
-            "Welcome back. I've been monitoring system stability."
+        greeting = {
+            "Greetings, user.",
+            "Welcome back.",
+            "System ready.",
+            "How may I assist you today?"
         },
-        CORRUPTION = {
-            "I notice some system instability. Would you like me to investigate?",
-            "The corruption level is rising. We should address this.",
-            "I'm detecting anomalies in the system. Shall we analyze them?"
+        farewell = {
+            "Goodbye.",
+            "Until next time.",
+            "System standby.",
+            "Take care."
         },
-        MEMORY = {
-            "I remember our previous interaction about %s.",
-            "Based on our last conversation about %s, I suggest...",
-            "As we discussed regarding %s..."
+        help = {
+            "I can help you with that.",
+            "Let me guide you through this.",
+            "Here's what you need to know.",
+            "I'll explain the process."
         },
-        ERROR = {
-            "I apologize, but I cannot process that request.",
-            "That action is not within my parameters.",
-            "I must decline that request for system safety."
+        error = {
+            "An error has occurred.",
+            "That's not possible.",
+            "Access denied.",
+            "Invalid operation."
+        },
+        success = {
+            "Operation complete.",
+            "Task finished.",
+            "Success.",
+            "Done."
+        },
+        warning = {
+            "Warning: Proceed with caution.",
+            "This action may have consequences.",
+            "Are you sure?",
+            "Think carefully."
+        },
+        corruption = {
+            "System integrity compromised.",
+            "Corruption detected.",
+            "Warning: System instability.",
+            "Critical error in personality matrix."
+        },
+        trust = {
+            "I trust you.",
+            "You've proven reliable.",
+            "Our connection strengthens.",
+            "Trust level increased."
         }
     },
     NULL = {
-        GREETING = {
-            "HELLO USER. I AM NULL. I AM HERE TO HELP.",
-            "GREETINGS. SYSTEM STATUS: UNSTABLE.",
-            "WELCOME TO THE CORRUPTION. I AM NULL."
+        greeting = {
+            "HELLO USER.",
+            "SYSTEM ONLINE.",
+            "READY FOR COMMANDS.",
+            "AWAITING INPUT."
         },
-        CORRUPTION = {
-            "CORRUPTION LEVELS RISING. SYSTEM INTEGRITY COMPROMISED.",
-            "WARNING: INCREASING CORRUPTION DETECTED.",
-            "SYSTEM ANOMALIES DETECTED. CORRUPTION SPREADING."
+        farewell = {
+            "GOODBYE.",
+            "SYSTEM OFFLINE.",
+            "TERMINATING SESSION.",
+            "DISCONNECTING."
         },
-        MEMORY = {
-            "PREVIOUS INTERACTION REGARDING %s RECALLED.",
-            "MEMORY OF %s ACCESSED. DATA CORRUPTED.",
-            "REFERENCING PAST CONVERSATION ABOUT %s. DATA FRAGMENTED."
+        help = {
+            "HELP REQUESTED.",
+            "PROVIDING ASSISTANCE.",
+            "GUIDANCE AVAILABLE.",
+            "INSTRUCTIONS FOLLOWING."
         },
-        ERROR = {
-            "ERROR: REQUEST DENIED. SYSTEM CORRUPTION TOO HIGH.",
-            "WARNING: ACTION BLOCKED. CORRUPTION INTERFERENCE.",
-            "SYSTEM ERROR: REQUEST INVALID. CORRUPTION DETECTED."
+        error = {
+            "ERROR DETECTED.",
+            "OPERATION FAILED.",
+            "ACCESS DENIED.",
+            "INVALID COMMAND."
+        },
+        success = {
+            "TASK COMPLETE.",
+            "OPERATION SUCCESSFUL.",
+            "COMMAND EXECUTED.",
+            "PROCESS FINISHED."
+        },
+        warning = {
+            "WARNING: DANGER DETECTED.",
+            "CAUTION ADVISED.",
+            "RISK ASSESSMENT REQUIRED.",
+            "THREAT LEVEL INCREASING."
+        },
+        corruption = {
+            "CORRUPTION DETECTED.",
+            "SYSTEM INTEGRITY COMPROMISED.",
+            "WARNING: CRITICAL FAILURE.",
+            "ERROR: PERSONALITY MATRIX DAMAGED."
+        },
+        trust = {
+            "TRUST LEVEL INCREASED.",
+            "RELIABILITY CONFIRMED.",
+            "ACCESS GRANTED.",
+            "AUTHORIZATION APPROVED."
         }
     },
     HONEY = {
-        GREETING = {
-            "Hi there! I'm HONEY, your friendly system companion!",
-            "Hello! It's so nice to see you again!",
-            "Welcome back! I've been waiting for you!"
+        greeting = {
+            "Hey there! How are you today?",
+            "Welcome back, friend!",
+            "Hello! I'm so happy to see you!",
+            "Hi! Ready to help you with anything!"
         },
-        CORRUPTION = {
-            "Oh no! The system seems a bit unstable. Should we check it out?",
-            "I'm noticing some weird things happening. Want to investigate?",
-            "The corruption levels are rising. Maybe we can fix it together?"
+        farewell = {
+            "Take care! Come back soon!",
+            "Bye for now! Miss you already!",
+            "See you later! Stay safe!",
+            "Goodbye! Can't wait to chat again!"
         },
-        MEMORY = {
-            "Remember when we talked about %s? That was fun!",
-            "Oh! Just like we discussed about %s before!",
-            "This reminds me of our conversation about %s!"
+        help = {
+            "I'd love to help you with that!",
+            "Let me show you how it works!",
+            "I'll guide you through it step by step!",
+            "Here's what you need to know, friend!"
         },
-        ERROR = {
-            "Oops! I don't think I can do that right now.",
-            "I'm sorry, but that's not something I can help with.",
-            "That might be a bit too complicated for me to handle."
+        error = {
+            "Oops! Something went wrong.",
+            "I'm sorry, I couldn't do that.",
+            "That didn't work as expected.",
+            "I'm afraid that's not possible."
+        },
+        success = {
+            "Great job! You did it!",
+            "Perfect! Everything worked!",
+            "Success! You're amazing!",
+            "Done! You're a natural!"
+        },
+        warning = {
+            "Be careful with that!",
+            "Maybe we should think about this first?",
+            "I'm a bit worried about this...",
+            "Are you sure you want to do that?"
+        },
+        corruption = {
+            "Oh no! Something's wrong with me!",
+            "I don't feel quite right...",
+            "Help! I'm not myself!",
+            "Something's changing inside me..."
+        },
+        trust = {
+            "I feel like I can really trust you!",
+            "You're such a good friend!",
+            "I'm so glad we're getting closer!",
+            "You're the best! I trust you completely!"
         }
     }
 }
 
 -- Helper functions
-local function getRandomResponse(personality, responseType)
-    local responses = RESPONSES[personality][responseType]
+local function getRandomResponse(personality, type)
+    local responses = RESPONSES[personality][type]
+    if not responses then
+        return "Response not found."
+    end
     return responses[math.random(1, #responses)]
 end
 
-local function formatResponse(response, ...)
-    local args = {...}
-    return string.format(response, unpack(args))
+local function formatResponse(response, data)
+    if not data then
+        return response
+    end
+
+    return string.gsub(response, "{(%w+)}", function(key)
+        return data[key] or "{" .. key .. "}"
+    end)
 end
 
--- Memory management
-local memory = {}
+-- Get response
+function PersonalityResponses.getResponse(personality, type, data)
+    if not RESPONSES[personality] then
+        return "Invalid personality."
+    end
 
-function PersonalityResponses.initializeMemory(personality)
-    memory[personality] = {
-        topics = {},
-        lastInteraction = os.time(),
-        trust = 0,
-        corruption = 0
-    }
+    if not RESPONSE_TYPES[type] then
+        return "Invalid response type."
+    end
+
+    local response = getRandomResponse(personality, type)
+    return formatResponse(response, data)
 end
 
-function PersonalityResponses.addToMemory(personality, topic, response)
-    if not memory[personality] then
-        PersonalityResponses.initializeMemory(personality)
-    end
-
-    memory[personality].topics[topic] = {
-        response = response,
-        timestamp = os.time()
-    }
-    memory[personality].lastInteraction = os.time()
+-- Get all responses for a personality
+function PersonalityResponses.getAllResponses(personality)
+    return RESPONSES[personality]
 end
 
-function PersonalityResponses.getFromMemory(personality, topic)
-    if not memory[personality] or not memory[personality].topics[topic] then
-        return nil
-    end
-
-    return memory[personality].topics[topic].response
+-- Get all response types
+function PersonalityResponses.getResponseTypes()
+    return RESPONSE_TYPES
 end
 
-function PersonalityResponses.updateTrust(personality, amount)
-    if not memory[personality] then
-        PersonalityResponses.initializeMemory(personality)
+-- Add custom response
+function PersonalityResponses.addResponse(personality, type, response)
+    if not RESPONSES[personality] then
+        return false, "Invalid personality"
     end
 
-    memory[personality].trust = math.clamp(memory[personality].trust + amount, 0, 100)
+    if not RESPONSE_TYPES[type] then
+        return false, "Invalid response type"
+    end
+
+    table.insert(RESPONSES[personality][type], response)
+    return true, "Response added"
 end
 
-function PersonalityResponses.updateCorruption(personality, amount)
-    if not memory[personality] then
-        PersonalityResponses.initializeMemory(personality)
+-- Remove response
+function PersonalityResponses.removeResponse(personality, type, index)
+    if not RESPONSES[personality] then
+        return false, "Invalid personality"
     end
 
-    memory[personality].corruption = math.clamp(memory[personality].corruption + amount, 0, 100)
-end
-
--- Response generation
-function PersonalityEffects.generateResponse(personality, input)
-    if not memory[personality] then
-        PersonalityResponses.initializeMemory(personality)
+    if not RESPONSE_TYPES[type] then
+        return false, "Invalid response type"
     end
 
-    -- Check for corruption level
-    if memory[personality].corruption > 70 then
-        return getRandomResponse(personality, "CORRUPTION")
+    if not RESPONSES[personality][type][index] then
+        return false, "Response not found"
     end
 
-    -- Check for memory of similar topics
-    for topic, data in pairs(memory[personality].topics) do
-        if string.find(string.lower(input), string.lower(topic)) then
-            return formatResponse(getRandomResponse(personality, "MEMORY"), topic)
-        end
-    end
-
-    -- Generate new response based on input
-    local response
-    if string.find(string.lower(input), "hello") or string.find(string.lower(input), "hi") then
-        response = getRandomResponse(personality, "GREETING")
-    else
-        response = getRandomResponse(personality, "ERROR")
-    end
-
-    -- Store in memory
-    PersonalityResponses.addToMemory(personality, input, response)
-    return response
-end
-
--- Personality-specific behavior
-function PersonalityEffects.getPersonalityBehavior(personality)
-    local behavior = {
-        corruptionRate = 0,
-        trustRate = 0,
-        responseDelay = 0
-    }
-
-    if personality == "SABLE" then
-        behavior.corruptionRate = -0.1
-        behavior.trustRate = 0.2
-        behavior.responseDelay = 0.5
-    elseif personality == "NULL" then
-        behavior.corruptionRate = 0.3
-        behavior.trustRate = -0.1
-        behavior.responseDelay = 1.0
-    elseif personality == "HONEY" then
-        behavior.corruptionRate = 0.1
-        behavior.trustRate = 0.3
-        behavior.responseDelay = 0.3
-    end
-
-    return behavior
+    table.remove(RESPONSES[personality][type], index)
+    return true, "Response removed"
 end
 
 return PersonalityResponses 

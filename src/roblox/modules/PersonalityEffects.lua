@@ -4,177 +4,239 @@ local PersonalityEffects = {}
 -- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
 -- Constants
-local PERSONALITY_COLORS = {
-    SABLE = Color3.fromRGB(0, 0, 0),      -- Black
-    NULL = Color3.fromRGB(255, 0, 0),     -- Red
-    HONEY = Color3.fromRGB(255, 215, 0)   -- Gold
+local EFFECT_TYPES = {
+    VISUAL = "visual",
+    AUDIO = "audio",
+    PARTICLE = "particle",
+    GLITCH = "glitch"
 }
 
-local PERSONALITY_SOUNDS = {
-    SABLE = "rbxassetid://1234567890",    -- Replace with actual sound IDs
-    NULL = "rbxassetid://1234567891",
-    HONEY = "rbxassetid://1234567892"
+-- Effect definitions
+local EFFECTS = {
+    SABLE = {
+        visual = {
+            color = Color3.fromRGB(0, 0, 0),
+            transparency = 0.5,
+            blur = 0.2
+        },
+        audio = {
+            ambient = "rbxassetid://1234567890", -- Replace with actual sound ID
+            volume = 0.5,
+            pitch = 1.0
+        },
+        particle = {
+            color = Color3.fromRGB(0, 0, 0),
+            size = 0.1,
+            speed = 5
+        },
+        glitch = {
+            intensity = 0.1,
+            frequency = 0.5
+        }
+    },
+    NULL = {
+        visual = {
+            color = Color3.fromRGB(255, 0, 0),
+            transparency = 0.3,
+            blur = 0.5
+        },
+        audio = {
+            ambient = "rbxassetid://0987654321", -- Replace with actual sound ID
+            volume = 0.7,
+            pitch = 0.8
+        },
+        particle = {
+            color = Color3.fromRGB(255, 0, 0),
+            size = 0.2,
+            speed = 10
+        },
+        glitch = {
+            intensity = 0.5,
+            frequency = 1.0
+        }
+    },
+    HONEY = {
+        visual = {
+            color = Color3.fromRGB(255, 215, 0),
+            transparency = 0.7,
+            blur = 0.1
+        },
+        audio = {
+            ambient = "rbxassetid://5678901234", -- Replace with actual sound ID
+            volume = 0.3,
+            pitch = 1.2
+        },
+        particle = {
+            color = Color3.fromRGB(255, 215, 0),
+            size = 0.05,
+            speed = 3
+        },
+        glitch = {
+            intensity = 0.05,
+            frequency = 0.2
+        }
+    }
 }
+
+-- Active effects
+local activeEffects = {}
 
 -- Helper functions
-local function createSound(parent, soundId)
-    local sound = Instance.new("Sound")
-    sound.SoundId = soundId
-    sound.Parent = parent
-    return sound
-end
+local function createEffectObject(parent, effectType, personality)
+    local effect = Instance.new("Frame")
+    effect.Name = personality .. "_" .. effectType
+    effect.Size = UDim2.new(1, 0, 1, 0)
+    effect.BackgroundTransparency = 1
+    effect.Parent = parent
 
-local function createParticleEmitter(parent, color)
-    local emitter = Instance.new("ParticleEmitter")
-    emitter.Color = ColorSequence.new(color)
-    emitter.Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.1),
-        NumberSequenceKeypoint.new(1, 0)
-    })
-    emitter.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    })
-    emitter.Rate = 50
-    emitter.Speed = NumberRange.new(5, 10)
-    emitter.Lifetime = NumberRange.new(0.5, 1)
-    emitter.SpreadAngle = Vector2.new(45, 45)
-    emitter.Parent = parent
-    return emitter
-end
+    if effectType == EFFECT_TYPES.VISUAL then
+        local blur = Instance.new("BlurEffect")
+        blur.Size = EFFECTS[personality].visual.blur
+        blur.Parent = effect
 
--- SABLE effects
-function PersonalityEffects.applySableEffects(window)
-    -- Dark theme
-    window.BackgroundColor3 = PERSONALITY_COLORS.SABLE
-    window.BackgroundTransparency = 0.1
-
-    -- Add subtle particle effect
-    local emitter = createParticleEmitter(window, PERSONALITY_COLORS.SABLE)
-    emitter.Enabled = true
-
-    -- Add ambient sound
-    local sound = createSound(window, PERSONALITY_SOUNDS.SABLE)
-    sound.Volume = 0.3
-    sound.Looped = true
-    sound:Play()
-
-    -- Add typing sound
-    local typingSound = createSound(window, PERSONALITY_SOUNDS.SABLE)
-    typingSound.Volume = 0.2
-
-    return {
-        cleanup = function()
-            emitter:Destroy()
-            sound:Destroy()
-            typingSound:Destroy()
-        end,
-        playTypingSound = function()
-            typingSound:Play()
-        end
-    }
-end
-
--- NULL effects
-function PersonalityEffects.applyNullEffects(window)
-    -- Red theme with corruption
-    window.BackgroundColor3 = PERSONALITY_COLORS.NULL
-    window.BackgroundTransparency = 0.2
-
-    -- Add aggressive particle effect
-    local emitter = createParticleEmitter(window, PERSONALITY_COLORS.NULL)
-    emitter.Enabled = true
-    emitter.Rate = 100
-    emitter.Speed = NumberRange.new(10, 20)
-
-    -- Add corrupted sound
-    local sound = createSound(window, PERSONALITY_SOUNDS.NULL)
-    sound.Volume = 0.4
-    sound.Looped = true
-    sound:Play()
-
-    -- Add glitch sound
-    local glitchSound = createSound(window, PERSONALITY_SOUNDS.NULL)
-    glitchSound.Volume = 0.3
-
-    return {
-        cleanup = function()
-            emitter:Destroy()
-            sound:Destroy()
-            glitchSound:Destroy()
-        end,
-        playGlitchSound = function()
-            glitchSound:Play()
-        end
-    }
-end
-
--- HONEY effects
-function PersonalityEffects.applyHoneyEffects(window)
-    -- Gold theme
-    window.BackgroundColor3 = PERSONALITY_COLORS.HONEY
-    window.BackgroundTransparency = 0.15
-
-    -- Add sparkle particle effect
-    local emitter = createParticleEmitter(window, PERSONALITY_COLORS.HONEY)
-    emitter.Enabled = true
-    emitter.Rate = 30
-    emitter.Speed = NumberRange.new(2, 5)
-    emitter.Lifetime = NumberRange.new(0.3, 0.6)
-
-    -- Add ambient sound
-    local sound = createSound(window, PERSONALITY_SOUNDS.HONEY)
-    sound.Volume = 0.3
-    sound.Looped = true
-    sound:Play()
-
-    -- Add notification sound
-    local notificationSound = createSound(window, PERSONALITY_SOUNDS.HONEY)
-    notificationSound.Volume = 0.2
-
-    return {
-        cleanup = function()
-            emitter:Destroy()
-            sound:Destroy()
-            notificationSound:Destroy()
-        end,
-        playNotificationSound = function()
-            notificationSound:Play()
-        end
-    }
-end
-
--- Apply personality-specific effects to text
-function PersonalityEffects.applyToText(textLabel, personality)
-    local color = PERSONALITY_COLORS[personality]
-    if not color then return end
-
-    -- Apply personality-specific text styling
-    textLabel.TextColor3 = color
-    textLabel.Font = Enum.Font.Code
-    textLabel.TextSize = 14
-
-    -- Add subtle animation
-    local originalSize = textLabel.TextSize
-    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-    local function animateText()
-        local tween = TweenService:Create(textLabel, tweenInfo, {
-            TextSize = originalSize + 2
-        })
-        tween:Play()
-        tween.Completed:Connect(function()
-            TweenService:Create(textLabel, tweenInfo, {
-                TextSize = originalSize
-            }):Play()
-        end)
+        local colorCorrection = Instance.new("ColorCorrectionEffect")
+        colorCorrection.TintColor = EFFECTS[personality].visual.color
+        colorCorrection.Parent = effect
+    elseif effectType == EFFECT_TYPES.AUDIO then
+        local sound = Instance.new("Sound")
+        sound.SoundId = EFFECTS[personality].audio.ambient
+        sound.Volume = EFFECTS[personality].audio.volume
+        sound.Pitch = EFFECTS[personality].audio.pitch
+        sound.Looped = true
+        sound.Parent = effect
+    elseif effectType == EFFECT_TYPES.PARTICLE then
+        local particleEmitter = Instance.new("ParticleEmitter")
+        particleEmitter.Color = ColorSequence.new(EFFECTS[personality].particle.color)
+        particleEmitter.Size = NumberSequence.new(EFFECTS[personality].particle.size)
+        particleEmitter.Speed = NumberRange.new(EFFECTS[personality].particle.speed)
+        particleEmitter.Parent = effect
+    elseif effectType == EFFECT_TYPES.GLITCH then
+        local glitchEffect = Instance.new("Frame")
+        glitchEffect.Name = "GlitchEffect"
+        glitchEffect.Size = UDim2.new(1, 0, 1, 0)
+        glitchEffect.BackgroundTransparency = 1
+        glitchEffect.Parent = effect
     end
 
-    return {
-        animate = animateText
-    }
+    return effect
+end
+
+-- Apply effect
+function PersonalityEffects.applyEffect(parent, personality, effectType)
+    if not EFFECTS[personality] then
+        return nil, "Invalid personality"
+    end
+
+    if not EFFECT_TYPES[effectType] then
+        return nil, "Invalid effect type"
+    end
+
+    local effect = createEffectObject(parent, effectType, personality)
+    activeEffects[effect.Name] = effect
+
+    if effectType == EFFECT_TYPES.AUDIO then
+        local sound = effect:FindFirstChild("Sound")
+        if sound then
+            sound:Play()
+        end
+    end
+
+    return effect
+end
+
+-- Remove effect
+function PersonalityEffects.removeEffect(effectName)
+    local effect = activeEffects[effectName]
+    if not effect then
+        return false, "Effect not found"
+    end
+
+    if effect:FindFirstChild("Sound") then
+        effect.Sound:Stop()
+    end
+
+    effect:Destroy()
+    activeEffects[effectName] = nil
+    return true, "Effect removed"
+end
+
+-- Update effect
+function PersonalityEffects.updateEffect(effectName, properties)
+    local effect = activeEffects[effectName]
+    if not effect then
+        return false, "Effect not found"
+    end
+
+    for property, value in pairs(properties) do
+        if effect:FindFirstChild(property) then
+            effect[property].Value = value
+        end
+    end
+
+    return true, "Effect updated"
+end
+
+-- Get effect
+function PersonalityEffects.getEffect(effectName)
+    return activeEffects[effectName]
+end
+
+-- Get all effects
+function PersonalityEffects.getAllEffects()
+    return activeEffects
+end
+
+-- Get effect types
+function PersonalityEffects.getEffectTypes()
+    return EFFECT_TYPES
+end
+
+-- Get personality effects
+function PersonalityEffects.getPersonalityEffects(personality)
+    return EFFECTS[personality]
+end
+
+-- Update glitch effect
+function PersonalityEffects.updateGlitchEffect(effectName, intensity, frequency)
+    local effect = activeEffects[effectName]
+    if not effect then
+        return false, "Effect not found"
+    end
+
+    local glitchEffect = effect:FindFirstChild("GlitchEffect")
+    if not glitchEffect then
+        return false, "Glitch effect not found"
+    end
+
+    -- Update glitch properties
+    local tweenInfo = TweenInfo.new(
+        1/frequency,
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.InOut
+    )
+
+    local tween = TweenService:Create(glitchEffect, tweenInfo, {
+        Position = UDim2.new(
+            math.random(-intensity, intensity),
+            0,
+            math.random(-intensity, intensity),
+            0
+        )
+    })
+
+    tween:Play()
+    return true, "Glitch effect updated"
+end
+
+-- Cleanup
+function PersonalityEffects.cleanup()
+    for _, effect in pairs(activeEffects) do
+        effect:Destroy()
+    end
+    activeEffects = {}
 end
 
 return PersonalityEffects 

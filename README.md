@@ -6,7 +6,7 @@
 
 MIRAGE.exe is a meta-horror simulation that presents itself as your operating system—except it feels alive. Navigate through a retro-futuristic desktop environment where every action awakens something deeper. Interact with haunted applications, cursed files, and AI companions that remember everything.
 
-## 🌟 Features
+## 🌟 Core Features
 
 - 🖥️ **Fake Operating System Shell**
   - Custom UI mimicking a retro-futurist OS (Win95 + vaporwave aesthetic)
@@ -38,8 +38,13 @@ MIRAGE.exe is a meta-horror simulation that presents itself as your operating sy
   - Ghost file spawning mechanics
   - Trust-based decision making
 
-## 🛠️ Technical Stack
+## 🚀 Platform Implementations
 
+### Desktop Application (React + Tauri)
+
+A native desktop application with full OS integration capabilities.
+
+#### 🛠️ Technical Stack
 - **Frontend**: React + TypeScript
 - **Desktop Framework**: Tauri
 - **Styling**: Tailwind CSS + Custom Vaporwave Theme
@@ -47,148 +52,172 @@ MIRAGE.exe is a meta-horror simulation that presents itself as your operating sy
 - **Audio Processing**: Web Audio API
 - **File System**: Tauri FS API
 
-## 🚀 Getting Started
+#### 📦 Installation
 
-### Prerequisites
+1. **Prerequisites**
+   - Node.js 16+
+   - Rust (for Tauri)
+   - System-specific build tools
 
-- Node.js 16+
-- Rust (for Tauri)
-- System-specific build tools
-
-### Installation
-
-1. Clone the repository:
+2. **Setup**
    ```bash
    git clone https://github.com/yourusername/mirage.exe.git
    cd mirage.exe
-   ```
-
-2. Install dependencies:
-   ```bash
    npm install
    ```
 
-3. Start development server:
+3. **Development**
    ```bash
    npm run tauri dev
    ```
 
-## 📁 Project Structure
+4. **Build for macOS**
+   ```bash
+   chmod +x build_macos.sh
+   ./build_macos.sh
+   ```
 
+#### 📁 Project Structure
 ```
 mirage.exe/
 ├── src/
 │   ├── os-shell/        # OS shell components
-│   ├── apps/           # Simulated applications
-│   ├── ai/             # AI personality system
-│   ├── core/           # Core game mechanics
+│   ├── components/      # React components
+│   ├── store/          # Zustand state management
 │   ├── effects/        # Visual effects
-│   └── endings/        # Game endings
+│   ├── styles/         # Global styles and themes
+│   └── types/          # TypeScript type definitions
 ├── public/
 │   └── assets/
-│       ├── audio/      # Sound effects and voices
-│       └── fonts/      # Custom fonts
-└── styles/            # Global styles and themes
+│       └── audio/      # Sound effects and voices
+├── src-tauri/          # Tauri configuration
+└── build/              # Build outputs
 ```
 
-## 🎨 Theme
+### Roblox Game Platform
+
+A complete implementation within Roblox Studio with similar functionality.
+
+#### 🛠️ Technical Stack
+- **Platform**: Roblox Studio
+- **Language**: Lua
+- **Build Tool**: Rojo
+- **Architecture**: Modular Lua modules
+
+#### 📦 Installation
+
+1. **Prerequisites**
+   - [Rojo](https://rojo.space/docs/installation/)
+   - [Roblox Studio](https://www.roblox.com/create)
+   - Git (optional, for version control)
+
+2. **Setup**
+   ```bash
+   git clone https://github.com/yourusername/MIRAGE.EXE.git
+   cd MIRAGE.EXE
+   chmod +x deploy.sh
+   ```
+
+3. **Deployment**
+   ```bash
+   ./deploy.sh
+   ```
+
+#### 📁 Project Structure
+```
+MIRAGE.EXE/
+├── src/
+│   └── roblox/
+│       ├── modules/
+│       │   ├── PersonalityState.lua
+│       │   ├── PersonalityResponses.lua
+│       │   ├── PersonalityEffects.lua
+│       │   ├── GlitchEffect.lua
+│       │   ├── FileSystem.lua
+│       │   ├── CommandSystem.lua
+│       │   ├── TerminalInterface.lua
+│       │   ├── FileExplorer.lua
+│       │   ├── Settings.lua
+│       │   ├── HelpSystem.lua
+│       │   └── GameInterface.lua
+│       ├── deploy.server.lua
+│       ├── deploy.client.lua
+│       └── deploy.config.lua
+├── build/
+├── default.project.json
+└── deploy.sh
+```
+
+## 🎮 Usage
+
+### Terminal Commands (Both Platforms)
+
+- `help` - Show available commands
+- `cd` - Change directory
+- `ls` - List directory contents
+- `cat` - Display file contents
+- `mkdir` - Create directory
+- `rm` - Remove file/directory
+- `mv` - Move file/directory
+- `cp` - Copy file/directory
+
+### Personality Commands
+
+- `personality` - Change AI personality
+- `trust` - View/modify trust level
+- `corruption` - View/modify corruption level
+
+### Effect Commands
+
+- `effect` - Apply visual effects
+- `glitch` - Apply glitch effects
+
+## 🎨 Theme & Design
 
 The project uses a custom "dark-vapor" theme combining:
 - Retro-futuristic UI elements
 - Glitch effects and distortions
 - Monospaced and pixel fonts
 - Vaporwave-inspired color palette
+- Progressive corruption effects
 
 ## 🔒 Security Note
 
 This application simulates system-level interactions but does not actually access or modify your real system files. All interactions are contained within the application's sandbox.
 
+## 🛠️ Development
+
+### Build Scripts
+
+- `build_macos.sh` - Build macOS desktop application
+- `create_icon.sh` - Generate application icons
+- `deploy.sh` - Deploy Roblox implementation
+- `push.sh` - Deploy to GitHub
+
+### Configuration
+
+Both platforms can be configured through their respective config files:
+- **Desktop**: `src-tauri/tauri.conf.json`
+- **Roblox**: `src/roblox/deploy.config.lua`
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
 ## 📜 License
 
-MIT License - See LICENSE file for details
+MIT License - See [LICENSE](LICENSE) file for details
+
+## 🙏 Acknowledgments
+
+- Roblox Studio and Rojo teams
+- Tauri framework contributors
+- The open-source community
 
 ---
 
 *"Every action awakens something deeper..."* 🩸 
-
-# MIRAGE.EXE
-
-A Roblox-based interactive experience featuring multiple AI personalities and a simulated operating system environment.
-
-## Features
-
-- Multiple AI personalities (SABLE, NULL, HONEY) with unique behaviors and interactions
-- Simulated file system with file operations and corruption mechanics
-- Terminal interface for system interaction
-- File explorer with visual interface
-- Glitch effects and visual feedback
-- Personality-specific visual and audio effects
-
-## Project Structure
-
-```
-src/
-├── roblox/
-│   ├── modules/
-│   │   ├── FileSystem.lua
-│   │   ├── FileExplorer.lua
-│   │   ├── FileViewer.lua
-│   │   ├── GlitchEffect.lua
-│   │   ├── PersonalityEffects.lua
-│   │   ├── PersonalityResponses.lua
-│   │   ├── Terminal.lua
-│   │   └── UIComponents.lua
-│   ├── init.client.lua
-│   └── init.server.lua
-```
-
-## Setup
-
-1. Install [Rojo](https://rojo.space/docs/installation/)
-2. Clone this repository
-3. Run `rojo serve` to start the development server
-4. Use the Rojo plugin in Roblox Studio to connect to the server
-
-## Development
-
-- `rojo serve` - Start the development server
-- `rojo build` - Build the project
-- `rojo upload` - Upload the project to Roblox
-
-## Modules
-
-### FileSystem
-Handles file operations, directory management, and file corruption mechanics.
-
-### FileExplorer
-Provides a visual interface for browsing the file system.
-
-### FileViewer
-Displays file contents with appropriate viewers for different file types.
-
-### GlitchEffect
-Manages visual glitch effects for UI elements.
-
-### PersonalityEffects
-Handles personality-specific visual and audio effects.
-
-### PersonalityResponses
-Manages AI personality responses and memory.
-
-### Terminal
-Provides a command-line interface for system interaction.
-
-### UIComponents
-Common UI components used throughout the application.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request 
