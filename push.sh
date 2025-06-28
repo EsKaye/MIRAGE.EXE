@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$PROJECT_ROOT/build"
 VERSION_FILE="$PROJECT_ROOT/VERSION"
-GIT_REPO_URL="https://github.com/yourusername/mirage.exe.git"
+GIT_REPO_URL="https://github.com/EsKaye/MIRAGE.EXE.git"
 RELEASE_BRANCH="main"
 
 # 🛡️ Error handling and logging functions

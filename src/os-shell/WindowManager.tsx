@@ -1,40 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWindowStore } from '../store/windowStore';
 import { useCorruptionStore } from '../store/corruptionStore';
 import { GlitchOverlay } from '../effects/GlitchOverlay';
 
-interface Window {
-  id: string;
-  title: string;
-  type: 'file' | 'terminal' | 'app';
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  isMinimized: boolean;
-  isFocused: boolean;
-  content: React.ReactNode;
-}
-
 export const WindowManager: React.FC = () => {
-  const { windows, addWindow, removeWindow, updateWindow } = useWindowStore();
+  const { windows, removeWindow, updateWindow } = useWindowStore();
   const { corruptionLevel } = useCorruptionStore();
-  const [isDragging, setIsDragging] = useState(false);
-  const [activeWindow, setActiveWindow] = useState<string | null>(null);
 
   // 🎭 Window drag handlers
   const handleDragStart = (windowId: string) => {
-    setIsDragging(true);
-    setActiveWindow(windowId);
     updateWindow(windowId, { isFocused: true });
   };
 
   const handleDragEnd = () => {
-    setIsDragging(false);
+    // Drag end handler
   };
 
   // 🖥️ Window focus management
   const handleWindowClick = (windowId: string) => {
-    setActiveWindow(windowId);
     updateWindow(windowId, { isFocused: true });
   };
 
