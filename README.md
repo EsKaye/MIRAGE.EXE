@@ -200,6 +200,19 @@ Both platforms can be configured through their respective config files:
 - **Desktop**: `src-tauri/tauri.conf.json`
 - **Roblox**: `src/roblox/deploy.config.lua`
 
+### Serafina Bot & Unity Guardians
+
+Serafina is a Discord liaison that bridges council chatter into the VR realm.
+
+- Slash command `/council report now` dispatches the latest council report on demand.
+- Messages in the council channel beginning with `!to <Guardian> <msg>` are relayed to
+  the matching Unity guardian via the MCP OSC bridge.
+- Guardian scripts live under `unity/Assets/GameDinVR/Scripts` and use
+  `LilybearOpsBus` for in-world communication.
+- Copy `serafina/.env.example` to configure tokens, channel IDs, and MCP endpoints.
+- At startup, Serafina performs an inter-repo handshake by pinging URLs from
+  `HANDSHAKE_ENDPOINTS`, logging each sibling service's declared capabilities.
+
 ## 🤝 Contributing
 
 1. Fork the repository
